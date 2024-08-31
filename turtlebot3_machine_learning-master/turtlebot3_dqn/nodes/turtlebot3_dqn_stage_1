@@ -1,0 +1,90 @@
+
+import rospy
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
+from nodes.PPO.train import TrainPPO
+from nodes.PPO_CNN.train import TrainPPOCNN
+from nodes.DQN.train import TrainDQN
+from nodes.DQN_CNN.train import TrainDQNCNN
+from nodes.SAC.train import TrainSAC
+from src.turtlebot3_dqn.environment import Env
+import pandas as pd
+from nodes.utils import plot_learning_curve
+import numpy as np
+
+if __name__ == '__main__':
+    rospy.init_node('turtlebot3_dqn_stage_1')
+
+    number_of_coins = rospy.get_param("number_of_coins", 0)
+    using_camera = rospy.get_param("using_camera", 0)
+    algorithm = rospy.get_param("algorithm", "DQN")
+
+
+    laser_size = 24
+
+    # 360 is the size of LIDAR (360 lasers) we add 2 values of angle and distance to goal
+    # the other 2 values are the angle and distance of the closer obstacle and we will add also
+    # the distance to each coin so we add the number of coins
+    # Al diablo hay que meter aqui como hacer las dims si se usa la camara!!!
+    if using_camera:
+        # Should use something like this?
+        state_size = (4,60,80)
+    else:
+        state_size = laser_size + 2 + 2 + (number_of_coins * 2)
+    
+    action_size = 5
+
+    env = Env(action_size, using_camera, number_of_coins, laser_size)
+
+    if algorithm == "SAC":
+        df = pd.DataFrame()
+        dfs_arr = []
+        for combination in [[0.0003, 32], [0.0003, 128]]:
+            train_instance = TrainSAC(state_size = state_size, action_size=action_size, env=env, using_camera = using_camera,  batch_size = combination[1], lr = combination[0])
+            score_history = train_instance.train()
+
+            dfs_arr.append(pd.DataFrame([score_history], columns=[f'ep{i+1}' for i in range(len(score_history))]))
+
+        df = pd.concat([dfs_arr[0],dfs_arr[1]], ignore_index=True)
+        labels = ["BATCH_SIZE=32 LR=0.0003", "BATCH_SIZE=128 LR=0.0003"]
+        plot_learning_curve(np.arange(1, 301), df, "/home/nietoff/tfg/src/turtlebot3_machine_learning-master/turtlebot3_dqn/images/", "SAC ANN STAGE COINS", labels)
+    
+    elif algorithm == "PPO":
+        
+        df = pd.DataFrame()
+        dfs_arr = []
+        for combination in [[0.003, 128], [0.0003, 32]]:
+            if using_camera:
+                train_instance = TrainPPOCNN(state_size = state_size, action_size=action_size, env=env, batch_size = batch_size)
+            else:
+                train_instance = TrainPPO(state_size = state_size, action_size=action_size, env=env, batch_size = combination[1], alpha = combination[0])
+            score_history = train_instance.train()
+
+            dfs_arr.append(pd.DataFrame([score_history], columns=[f'ep{i+1}' for i in range(len(score_history))]))
+
+        df = pd.concat([dfs_arr[0],dfs_arr[1]], ignore_index=True)
+
+        labels = ["BATCH_SIZE=64 LR=0.003", "BATCH_SIZE=128 LR=0.0003"]
+        plot_learning_curve(np.arange(1, 301), df, "/home/nietoff/tfg/src/turtlebot3_machine_learning-master/turtlebot3_dqn/images/", "PPO ANN STAGE COINS", labels)
+
+    else:
+        
+        df = pd.DataFrame()
+        dfs_arr = []
+        for combination in [[0.003, 64]]: #[0.003, 64], 
+            if using_camera:
+                train_instance = TrainDQNCNN(state_size = state_size, action_size=action_size, env=env, batch_size = combination[1], lr = combination[0])
+            else:
+                train_instance = TrainDQN(state_size = state_size, action_size=action_size, env=env, batch_size = combination[1], lr = combination[0])
+
+            score_history = train_instance.train()
+
+            dfs_arr.append(pd.DataFrame([score_history], columns=[f'ep{i+1}' for i in range(len(score_history))]))
+
+        df = pd.concat([dfs_arr[0]], ignore_index=True)
+        labels = ["BATCH_SIZE=128 LR=0.0003"]
+        plot_learning_curve(np.arange(1, 601), df, "/home/nietoff/tfg/src/turtlebot3_machine_learning-master/turtlebot3_dqn/images/", "DQN CNN STAGE 1 ", labels)
+        #df.to_excel('/home/nietoff/tfg/src/turtlebot3_machine_learning-master/turtlebot3_dqn/images/values.xlsx', index=False)

@@ -1,0 +1,15 @@
+<launch>
+  <param name="number_of_coins" value="$(env COINS)"/>
+  <param name="using_camera" value="$(env USING_CAMERA)"/>
+  <param name="algorithm" value="$(env RL_ALGORITHM)"/>
+  <arg name="stage" default="0"/>
+  <param name="stage_number"  value="$(arg stage)"/>
+  <node pkg="turtlebot3_dqn" type="turtlebot3_dqn_stage_1" name="turtlebot3_dqn_stage_1" output="screen" />
+  
+
+  <node if="$(eval arg('stage') == 3)" pkg="turtlebot3_dqn" type="moving_obstacle" name="moving_obstacle" output="screen" />
+ 
+  <node if="$(eval arg('stage') == 4)" pkg="turtlebot3_dqn" type="combination_obstacle_1" name="combination_obstacle_1" output="screen" />
+  <node if="$(eval arg('stage') == 4)" pkg="turtlebot3_dqn" type="combination_obstacle_2" name="combination_obstacle_2" output="screen" />
+ 
+</launch>
