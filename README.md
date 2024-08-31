@@ -112,7 +112,7 @@ cd ~/catkin_ws && catkin_make
 
 ## Running the Project
 
-For executing the project and to simplify all we will open two terminals and we will use one for running the environment and another for running the algorithm.
+For executing the project and to simplify all we will open two terminals and we will use one for running the environment and another for running the algorithm if we are using ANN nets, if we are using CNN nets we will need two more terminal for ruuning the extrinsic and intrinsic params of the camera.
 
 ### 1. First terminal
 
@@ -120,6 +120,12 @@ Here we need to export the turtlebot model that we will use. So we export an env
 
 ```bash
 export TURTLEBOT3_MODEL=burger
+```
+
+When using the CNN nets we have to import the model with integrated camera that is the model WafflePi, we can do it using:
+
+```bash
+export TURTLEBOT3_MODEL=waffle_pi
 ```
 
 Once done that we can run the simulation with the next command:
@@ -156,6 +162,34 @@ roslaunch turtlebot3_dqn turtlebot3_stage.launch stage:=x
 ```
 
 We should replace the 'x' for the stage that we want we have from 1 to 4 stages (should match with the stage selected on the first terminal).
+
+### 3. Thrird terminal (only for CNN nets)
+
+Here we will launch the intrinsic configuration for the camera with the next command:
+
+
+```bash
+roslaunch turtlebot3_autorace_camera intrinsic_camera_calibration.launch
+```
+
+### 4. Fourth terminal (only for CNN nets)
+
+Here we will launch the extrinsic configuration for the camera with the next command:
+
+
+```bash
+roslaunch turtlebot3_autorace_camera extrinsic_camera_calibration.launch node:=calibration
+```
+
+### 5. Fiveth terminal (optional)
+
+We can use RViz that is a 3D visualization tool used in the Robot Operating System (ROS) to display sensor data and state information from a robot. It helps in visualizing the robot's environment, planning paths, and debugging robot behavior. We can configure it to see the camera information adding a new visualization of type "Image" and chaging its topic for "camera/image". We can launch it using:
+
+
+```bash
+rviz
+```
+
 
 
 Link to a demo video: https://drive.google.com/file/d/1Ear55EpYeFlZbMX3f-Uzh8wN4MxxS-V9/view?usp=sharing
