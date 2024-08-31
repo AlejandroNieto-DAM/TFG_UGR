@@ -157,3 +157,6 @@ roslaunch turtlebot3_dqn turtlebot3_stage.launch stage:=x
 
 We should replace the 'x' for the stage that we want we have from 1 to 4 stages (should match with the stage selected on the first terminal).
 
+
+Link to a demo video: https://drive.google.com/file/d/1Ear55EpYeFlZbMX3f-Uzh8wN4MxxS-V9/view?usp=sharing
+
